@@ -1,0 +1,40 @@
+{
+  "name": "create-schift",
+  "version": "0.1.0",
+  "description": "Create a new Schift AI agent project",
+  "type": "module",
+  "bin": {
+    "create-schift": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "schift",
+    "ai-agent",
+    "rag",
+    "create",
+    "scaffold",
+    "cli"
+  ],
+  "author": "Schift <hello@schift.io>",
+  "license": "MIT",
+  "dependencies": {
+    "@inquirer/prompts": "^7.0.0",
+    "fs-extra": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.0",
+    "@types/node": "^22.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  }
+}
