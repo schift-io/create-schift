@@ -17,7 +17,8 @@ export async function collectConfig(): Promise<ProjectConfig> {
     default: "my-agent",
     validate: (v) => {
       if (!v.trim()) return "Project name is required";
-      if (!/^[a-z0-9-]+$/.test(v)) return "Use lowercase letters, numbers, and hyphens only";
+      if (!/^[a-z0-9][a-z0-9-]*$/.test(v))
+        return "Use lowercase letters (a-z), numbers, and hyphens only. Korean/Unicode characters are not supported.";
       return true;
     },
   });
@@ -32,6 +33,7 @@ export async function collectConfig(): Promise<ProjectConfig> {
     validate: (v) => {
       if (!v.trim()) return "API key is required";
       if (!v.startsWith("sch_")) return "API key should start with 'sch_'";
+      if (v.length < 20) return "API key looks too short. Check your key at schift.io/app.";
       return true;
     },
   });

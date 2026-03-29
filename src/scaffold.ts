@@ -86,7 +86,19 @@ export async function scaffold(
   // Install dependencies
   if (!options.skipInstall) {
     console.log("\n  Installing dependencies...\n");
-    execSync("npm install", { cwd: targetDir, stdio: "inherit" });
+    try {
+      execSync("npm install", { cwd: targetDir, stdio: "inherit" });
+    } catch {
+      console.error(`
+  npm install failed. The project was scaffolded at:
+    ${targetDir}
+
+  To retry manually:
+    cd ${config.name}
+    npm install
+`);
+      return;
+    }
   }
 
   console.log(`

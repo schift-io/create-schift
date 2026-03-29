@@ -107,4 +107,32 @@ describe("scaffold", () => {
       ),
     ).rejects.toThrow("not found");
   });
+
+  // ── Scenario #50: .gitignore includes .env ──
+  it("scaffolded project has .gitignore with .env", async () => {
+    const projectDir = path.join(tmpDir, "gitignore-test");
+    await scaffold(
+      { name: "gitignore-test", template: "blank", apiKey: "sch_test123456789012" },
+      { targetDir: projectDir, skipInstall: true },
+    );
+
+    const gitignore = await fs.readFile(path.join(projectDir, ".gitignore"), "utf-8");
+    expect(gitignore).toContain(".env");
+    expect(gitignore).toContain("node_modules");
+  });
+
+  // ── Scenario #35: engines field in package.json ──
+  it("scaffolded project specifies engines.node >= 20", async () => {
+    for (const template of ["blank", "cs-chatbot"]) {
+      const projectDir = path.join(tmpDir, `engines-${template}`);
+      await scaffold(
+        { name: `engines-${template}`, template, apiKey: "sch_test123456789012" },
+        { targetDir: projectDir, skipInstall: true },
+      );
+
+      const pkg = await fs.readJson(path.join(projectDir, "package.json"));
+      expect(pkg.engines).toBeDefined();
+      expect(pkg.engines.node).toContain("20");
+    }
+  });
 });
