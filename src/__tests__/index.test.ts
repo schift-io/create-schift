@@ -101,7 +101,7 @@ describe("runCreateSchift", () => {
     expect(execSyncMock).not.toHaveBeenCalled();
   });
 
-  it("skips onboarding deploy when no CLI package is available", async () => {
+  it("throws when onboarding deploy is enabled but no CLI package is available", async () => {
     const { runCreateSchift } = await import("../index.js");
 
     collectConfigMock.mockResolvedValueOnce({
@@ -118,7 +118,9 @@ describe("runCreateSchift", () => {
       return undefined;
     });
 
-    await expect(runCreateSchift(["--auth=manual"])).resolves.toBeUndefined();
+    await expect(runCreateSchift(["--auth=manual"])).rejects.toThrow(
+      "Deploy CLI package was not found on npm",
+    );
 
     expect(execSyncMock).toHaveBeenCalledWith("npm view @schift-io/cli version", expect.any(Object));
     expect(execSyncMock).toHaveBeenCalledWith("npm view schift version", expect.any(Object));

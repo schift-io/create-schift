@@ -72,10 +72,9 @@ export async function runCreateSchift(argv: string[]) {
     const deployCommand = resolveDeployCommand();
 
     if (!deployCommand) {
-      console.error(
-        "\n  Deploy CLI package was not found on npm. Project scaffold is ready. Publish/install Schift CLI, then run deploy manually.\n",
+      throw new Error(
+        "Deploy CLI package was not found on npm. Project scaffold is ready. Publish/install Schift CLI, then run deploy manually.",
       );
-      return;
     }
 
     try {
