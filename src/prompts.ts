@@ -1,8 +1,18 @@
 import { checkbox, confirm, input, select } from "@inquirer/prompts";
 import { execFileSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  createServer,
+  type IncomingMessage,
+  type ServerResponse,
+} from "node:http";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
 
@@ -28,12 +38,18 @@ export interface CollectConfigOptions {
 }
 
 export const TEMPLATES = [
-  { name: "cs-chatbot     - Customer support agent with RAG", value: "cs-chatbot" },
+  {
+    name: "cs-chatbot     - Customer support agent with RAG",
+    value: "cs-chatbot",
+  },
   { name: "blank          - Empty agent project", value: "blank" },
 ] as const;
 
 const DATA_SOURCES = [
-  { name: "Local files  - enter path to your documents folder", value: "local" },
+  {
+    name: "Local files  - enter path to your documents folder",
+    value: "local",
+  },
   { name: "Notion       - connect at dashboard after deploy", value: "notion" },
   { name: "Google Drive - connect at dashboard after deploy", value: "gdrive" },
   { name: "I'll do it myself later", value: "skip" },
@@ -55,7 +71,9 @@ const DEFAULT_WEB_URL = "https://schift.io";
 function readStoredConfigApiKey(): string | null {
   if (!existsSync(CONFIG_PATH)) return null;
   try {
-    const parsed = JSON.parse(readFileSync(CONFIG_PATH, "utf-8")) as { api_key?: string };
+    const parsed = JSON.parse(readFileSync(CONFIG_PATH, "utf-8")) as {
+      api_key?: string;
+    };
     return parsed.api_key ?? null;
   } catch {
     return null;
@@ -66,7 +84,10 @@ function saveStoredConfigApiKey(apiKey: string): void {
   let config: Record<string, unknown> = {};
   if (existsSync(CONFIG_PATH)) {
     try {
-      config = JSON.parse(readFileSync(CONFIG_PATH, "utf-8")) as Record<string, unknown>;
+      config = JSON.parse(readFileSync(CONFIG_PATH, "utf-8")) as Record<
+        string,
+        unknown
+      >;
     } catch {
       config = {};
     }
@@ -113,7 +134,9 @@ async function runBuiltInOAuthLogin(): Promise<void> {
 
       if (error) {
         res.writeHead(200, { "Content-Type": "text/html" });
-        res.end(`<html><body><h2>Login failed</h2><p>${error}</p></body></html>`);
+        res.end(
+          `<html><body><h2>Login failed</h2><p>${error}</p></body></html>`,
+        );
         clearTimeout(timeout);
         server.close();
         reject(new Error(error));
@@ -132,17 +155,22 @@ async function runBuiltInOAuthLogin(): Promise<void> {
         return;
       }
 
-      res.writeHead(200, { "Content-Type": "text/html" });
-      res.end("<html><body><h2>Authenticated</h2><p>You can return to terminal.</p></body></html>");
+      // Redirect browser back to schift.io (avoids leaving user on localhost)
+      const returnUrl = `${webUrl}/auth/cli?status=success`;
+      res.writeHead(302, { Location: returnUrl });
+      res.end();
       clearTimeout(timeout);
       server.close();
       resolveKey(token);
     });
 
-    const timeout = setTimeout(() => {
-      server.close();
-      reject(new Error("Login timed out after 5 minutes"));
-    }, 5 * 60 * 1000);
+    const timeout = setTimeout(
+      () => {
+        server.close();
+        reject(new Error("Login timed out after 5 minutes"));
+      },
+      5 * 60 * 1000,
+    );
 
     let port = 0;
     server.listen(0, "127.0.0.1", () => {
@@ -216,12 +244,16 @@ export async function resolveExistingApiKey(
 ): Promise<string> {
   const existing = getExistingApiKey(resolvers);
   if (!existing) {
-    throw new Error("No existing API key found in SCHIFT_API_KEY or ~/.schift/config.json.");
+    throw new Error(
+      "No existing API key found in SCHIFT_API_KEY or ~/.schift/config.json.",
+    );
   }
 
   const useExisting = await resolvers.confirmUseExisting(maskApiKey(existing));
   if (!useExisting) {
-    throw new Error("Existing key use cancelled. Choose another authentication method.");
+    throw new Error(
+      "Existing key use cancelled. Choose another authentication method.",
+    );
   }
 
   return existing;
@@ -242,12 +274,16 @@ export async function resolveApiKey(
   if (!options.forceOAuth) {
     const existing = getExistingApiKey(resolvers);
     if (existing) {
-      const useExisting = await resolvers.confirmUseExisting(maskApiKey(existing));
+      const useExisting = await resolvers.confirmUseExisting(
+        maskApiKey(existing),
+      );
       if (useExisting) return existing;
     }
   }
 
-  resolvers.log("\nNo API key provided. Starting OAuth login with Schift CLI...\n");
+  resolvers.log(
+    "\nNo API key provided. Starting OAuth login with Schift CLI...\n",
+  );
   resolvers.log("1) Browser will open for Schift login");
   resolvers.log("2) Complete login and return to this terminal");
   resolvers.log("3) If browser doesn't open, open the URL shown below\n");
@@ -275,9 +311,13 @@ async function chooseAuthMode(hasExisting: boolean): Promise<AuthMode> {
   });
 }
 
-export async function collectConfig(options: CollectConfigOptions = {}): Promise<ProjectConfig> {
+export async function collectConfig(
+  options: CollectConfigOptions = {},
+): Promise<ProjectConfig> {
   if (options.forceOAuth && options.authMode && options.authMode !== "oauth") {
-    throw new Error("Cannot combine --force-oauth with --auth=manual or --auth=existing");
+    throw new Error(
+      "Cannot combine --force-oauth with --auth=manual or --auth=existing",
+    );
   }
 
   const name = await input({

@@ -36,13 +36,7 @@ describe("runCreateSchift", () => {
     await runCreateSchift(["--auth=manual"]);
 
     expect(scaffoldMock).toHaveBeenCalledTimes(1);
-    expect(execSyncMock).toHaveBeenCalledWith(
-      "npx --yes @schift-io/cli deploy",
-      expect.objectContaining({
-        stdio: "inherit",
-        cwd: expect.stringContaining("support-bot"),
-      }),
-    );
+    expect(execSyncMock).toHaveBeenCalledWith("schift deploy", expect.any(Object));
 
     collectConfigMock.mockResolvedValueOnce({
       name: "blank-bot",

@@ -13,8 +13,6 @@ interface ScaffoldOptions {
 
 /** Resolve templates directory (works in both dev and published mode). */
 function getTemplatesDir(): string {
-  // In published package: dist/index.js -> ../templates/
-  // In dev: src/scaffold.ts -> ../templates/
   const fromDist = path.resolve(__dirname, "..", "templates");
   const fromSrc = path.resolve(__dirname, "..", "..", "templates");
   if (fs.existsSync(fromDist)) return fromDist;
@@ -34,13 +32,7 @@ function replacePlaceholders(
   return result;
 }
 
-function resolveLocalDataDir(targetDir: string, localDataDir: string): string {
-  return path.isAbsolute(localDataDir)
-    ? localDataDir
-    : path.resolve(targetDir, localDataDir);
-}
-
-function writeSchiftConfig(targetDir: string, config: ProjectConfig, localDataDir?: string): void {
+function writeSchiftConfig(targetDir: string, config: ProjectConfig): void {
   const schiftConfig: Record<string, unknown> = {
     name: config.name,
     agent: {
@@ -50,38 +42,25 @@ function writeSchiftConfig(targetDir: string, config: ProjectConfig, localDataDi
     },
   };
 
-  if (localDataDir) {
+  if (config.localDataDir) {
     schiftConfig.rag = {
       bucket: `${config.name}-docs`,
-      dataDir: localDataDir,
+      dataDir: config.localDataDir,
     };
   }
 
-  fs.writeJsonSync(path.join(targetDir, "schift.config.json"), schiftConfig, { spaces: 2 });
-}
-
-async function writeOrCopyLocalData(targetDir: string, localDataDir: string): Promise<string> {
-  const absLocalDataDir = resolveLocalDataDir(targetDir, localDataDir);
-  const projectDataDir = path.join(targetDir, "data");
-
-  await fs.ensureDir(projectDataDir);
-
-  if (!(await fs.pathExists(absLocalDataDir))) {
-    await fs.writeFile(
-      path.join(projectDataDir, ".gitkeep"),
-      "Place your documents here. Schift will upload them on deploy.\n",
-    );
-    return "./data";
+  const integrations: Record<string, string> = {};
+  if (config.notionLater) integrations.notion = "pending";
+  if (config.gdriveLater) integrations["google-drive"] = "pending";
+  if (Object.keys(integrations).length > 0) {
+    schiftConfig.integrations = integrations;
   }
 
-  const entries = await fs.readdir(absLocalDataDir);
-  for (const entry of entries) {
-    const src = path.join(absLocalDataDir, entry);
-    const dst = path.join(projectDataDir, entry);
-    await fs.copy(src, dst);
-  }
-
-  return "./data";
+  fs.writeJsonSync(
+    path.join(targetDir, "schift.config.json"),
+    schiftConfig,
+    { spaces: 2 },
+  );
 }
 
 export async function scaffold(
@@ -90,7 +69,6 @@ export async function scaffold(
 ): Promise<void> {
   const targetDir = options.targetDir ?? path.resolve(process.cwd(), config.name);
 
-  // Check if directory already exists and has contents
   if (await fs.pathExists(targetDir)) {
     const files = await fs.readdir(targetDir);
     if (files.length > 0) {
@@ -113,7 +91,7 @@ export async function scaffold(
   // Copy template to target
   await fs.copy(templateDir, targetDir);
 
-  // Create .env from .env.example (before global replacement, so .env.example keeps placeholders)
+  // Create .env from .env.example
   const envExample = path.join(targetDir, ".env.example");
   const envFile = path.join(targetDir, ".env");
   if (await fs.pathExists(envExample)) {
@@ -122,7 +100,7 @@ export async function scaffold(
     await fs.writeFile(envFile, envProcessed);
   }
 
-  // Process all files: replace placeholders (skip .env.example to avoid leaking API key)
+  // Process all files: replace placeholders (skip .env.example)
   const allFiles = await getAllFiles(targetDir);
   for (const filePath of allFiles) {
     if (path.basename(filePath) === ".env.example") continue;
@@ -133,11 +111,22 @@ export async function scaffold(
     }
   }
 
-  const projectDataDir = config.localDataDir
-    ? await writeOrCopyLocalData(targetDir, config.localDataDir)
-    : undefined;
+  // Write schift.config.json (for `schift deploy`)
+  writeSchiftConfig(targetDir, config);
 
-  writeSchiftConfig(targetDir, config, projectDataDir);
+  // Create data dir if specified and doesn't exist
+  if (config.localDataDir) {
+    const absDataDir = path.isAbsolute(config.localDataDir)
+      ? config.localDataDir
+      : path.resolve(targetDir, config.localDataDir);
+    if (!fs.existsSync(absDataDir)) {
+      await fs.ensureDir(absDataDir);
+      await fs.writeFile(
+        path.join(absDataDir, ".gitkeep"),
+        "Place your documents here. Schift will upload them on deploy.\n",
+      );
+    }
+  }
 
   // Install dependencies
   if (!options.skipInstall) {
@@ -157,11 +146,27 @@ export async function scaffold(
     }
   }
 
+  // Next steps
   console.log(`
   Done! Next steps:
+
     cd ${config.name}`);
-  console.log("    npm run dev       # Start local dev server");
-  console.log("    schift deploy     # Upload data + deploy agent\n");
+
+  if (config.localDataDir) {
+    console.log(`    # Add your documents to ${config.localDataDir}/`);
+    console.log(`    schift deploy          # uploads data & deploys agent`);
+  } else {
+    console.log(`    npm run dev            # start local dev server`);
+    console.log(`    schift deploy          # deploy to Schift Cloud`);
+  }
+
+  if (config.notionLater || config.gdriveLater) {
+    console.log(`\n  Connect data sources at: https://schift.io/app`);
+    if (config.notionLater) console.log(`    - Notion`);
+    if (config.gdriveLater) console.log(`    - Google Drive`);
+  }
+
+  console.log();
 }
 
 /** Recursively get all file paths in a directory. */

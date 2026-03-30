@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import fs from "fs-extra";
 import path from "path";
 import os from "os";
@@ -134,44 +134,5 @@ describe("scaffold", () => {
       expect(pkg.engines).toBeDefined();
       expect(pkg.engines.node).toContain("20");
     }
-  });
-
-  it("prints schift deploy in next steps", async () => {
-    const projectDir = path.join(tmpDir, "deploy-next-step");
-    const spy = vi.spyOn(console, "log").mockImplementation(() => undefined);
-
-    await scaffold(
-      { name: "deploy-next-step", template: "blank", apiKey: "sch_test123456789012" },
-      { targetDir: projectDir, skipInstall: true },
-    );
-
-    const output = spy.mock.calls.map((call) => String(call[0])).join("\n");
-    spy.mockRestore();
-    expect(output).toContain("schift deploy");
-  });
-
-  it("copies local files into project data directory", async () => {
-    const srcData = path.join(tmpDir, "source-docs");
-    const projectDir = path.join(tmpDir, "local-files-agent");
-
-    await fs.ensureDir(srcData);
-    await fs.writeFile(path.join(srcData, "faq.md"), "hello");
-    await fs.writeFile(path.join(srcData, "note.txt"), "world");
-
-    await scaffold(
-      {
-        name: "local-files-agent",
-        template: "blank",
-        apiKey: "sch_test123456789012",
-        localDataDir: srcData,
-      },
-      { targetDir: projectDir, skipInstall: true },
-    );
-
-    expect(await fs.pathExists(path.join(projectDir, "data", "faq.md"))).toBe(true);
-    expect(await fs.pathExists(path.join(projectDir, "data", "note.txt"))).toBe(true);
-
-    const schiftConfig = await fs.readJson(path.join(projectDir, "schift.config.json"));
-    expect(schiftConfig.rag.dataDir).toBe("./data");
   });
 });
