@@ -1,7 +1,6 @@
 import { collectConfig, type AuthMode } from "./prompts.js";
 import { scaffold } from "./scaffold.js";
 import { execSync } from "node:child_process";
-import { pathToFileURL } from "node:url";
 
 interface CliOptions {
   authMode?: AuthMode;
@@ -71,6 +70,6 @@ async function main() {
   }
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (!process.env.VITEST) {
   main();
 }
