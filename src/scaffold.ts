@@ -34,6 +34,56 @@ function replacePlaceholders(
   return result;
 }
 
+function resolveLocalDataDir(targetDir: string, localDataDir: string): string {
+  return path.isAbsolute(localDataDir)
+    ? localDataDir
+    : path.resolve(targetDir, localDataDir);
+}
+
+function writeSchiftConfig(targetDir: string, config: ProjectConfig, localDataDir?: string): void {
+  const schiftConfig: Record<string, unknown> = {
+    name: config.name,
+    agent: {
+      name: config.name,
+      model: "gpt-4o-mini",
+      instructions: "You are a helpful AI assistant.",
+    },
+  };
+
+  if (localDataDir) {
+    schiftConfig.rag = {
+      bucket: `${config.name}-docs`,
+      dataDir: localDataDir,
+    };
+  }
+
+  fs.writeJsonSync(path.join(targetDir, "schift.config.json"), schiftConfig, { spaces: 2 });
+}
+
+async function writeOrCopyLocalData(targetDir: string, localDataDir: string): Promise<string> {
+  const absLocalDataDir = resolveLocalDataDir(targetDir, localDataDir);
+  const projectDataDir = path.join(targetDir, "data");
+
+  await fs.ensureDir(projectDataDir);
+
+  if (!(await fs.pathExists(absLocalDataDir))) {
+    await fs.writeFile(
+      path.join(projectDataDir, ".gitkeep"),
+      "Place your documents here. Schift will upload them on deploy.\n",
+    );
+    return "./data";
+  }
+
+  const entries = await fs.readdir(absLocalDataDir);
+  for (const entry of entries) {
+    const src = path.join(absLocalDataDir, entry);
+    const dst = path.join(projectDataDir, entry);
+    await fs.copy(src, dst);
+  }
+
+  return "./data";
+}
+
 export async function scaffold(
   config: ProjectConfig,
   options: ScaffoldOptions = {},
@@ -83,6 +133,12 @@ export async function scaffold(
     }
   }
 
+  const projectDataDir = config.localDataDir
+    ? await writeOrCopyLocalData(targetDir, config.localDataDir)
+    : undefined;
+
+  writeSchiftConfig(targetDir, config, projectDataDir);
+
   // Install dependencies
   if (!options.skipInstall) {
     console.log("\n  Installing dependencies...\n");
@@ -103,9 +159,9 @@ export async function scaffold(
 
   console.log(`
   Done! Next steps:
-    cd ${config.name}
-    npm run dev       # Start local dev server
-`);
+    cd ${config.name}`);
+  console.log("    npm run dev       # Start local dev server");
+  console.log("    schift deploy     # Upload data + deploy agent\n");
 }
 
 /** Recursively get all file paths in a directory. */
