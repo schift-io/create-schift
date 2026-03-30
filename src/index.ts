@@ -1,6 +1,7 @@
 import { collectConfig, type AuthMode } from "./prompts.js";
 import { scaffold } from "./scaffold.js";
 import { execSync } from "node:child_process";
+import path from "node:path";
 
 interface CliOptions {
   authMode?: AuthMode;
@@ -48,9 +49,14 @@ export async function runCreateSchift(argv: string[]) {
   if (config.template === "cs-chatbot" && config.runOnboardingDeploy !== false) {
     console.log("\n  Running onboarding deploy for cs-chatbot...\n");
     try {
-      execSync("schift deploy", { stdio: "inherit" });
+      execSync("npx --yes @schift-io/cli deploy", {
+        stdio: "inherit",
+        cwd: path.resolve(process.cwd(), config.name),
+      });
     } catch {
-      console.error("\n  Deploy step failed. Project scaffold is ready. Run `schift deploy` manually in your project.\n");
+      console.error(
+        "\n  Deploy step failed. Project scaffold is ready. Run `npx --yes @schift-io/cli deploy` in your project.\n",
+      );
     }
   }
 }
