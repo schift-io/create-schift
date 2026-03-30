@@ -1,6 +1,8 @@
 import { checkbox, confirm, input, select } from "@inquirer/prompts";
-import { execSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { randomBytes } from "node:crypto";
+import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
 
@@ -44,15 +46,124 @@ interface ApiKeyResolvers {
   confirmUseExisting: (preview: string) => Promise<boolean>;
 }
 
+const CONFIG_DIR = path.resolve(homedir(), ".schift");
+const CONFIG_PATH = path.resolve(CONFIG_DIR, "config.json");
+const DEFAULT_WEB_URL = "https://schift.io";
+
 function readStoredConfigApiKey(): string | null {
-  const configPath = path.resolve(homedir(), ".schift", "config.json");
-  if (!existsSync(configPath)) return null;
+  if (!existsSync(CONFIG_PATH)) return null;
   try {
-    const parsed = JSON.parse(readFileSync(configPath, "utf-8")) as { api_key?: string };
+    const parsed = JSON.parse(readFileSync(CONFIG_PATH, "utf-8")) as { api_key?: string };
     return parsed.api_key ?? null;
   } catch {
     return null;
   }
+}
+
+function saveStoredConfigApiKey(apiKey: string): void {
+  let config: Record<string, unknown> = {};
+  if (existsSync(CONFIG_PATH)) {
+    try {
+      config = JSON.parse(readFileSync(CONFIG_PATH, "utf-8")) as Record<string, unknown>;
+    } catch {
+      config = {};
+    }
+  }
+  config.api_key = apiKey;
+  mkdirSync(CONFIG_DIR, { recursive: true });
+  writeFileSync(CONFIG_PATH, `${JSON.stringify(config, null, 2)}\n`, "utf-8");
+  chmodSync(CONFIG_PATH, 0o600);
+}
+
+function getWebUrl(): string {
+  return process.env.SCHIFT_WEB_URL || DEFAULT_WEB_URL;
+}
+
+function openBrowser(url: string): void {
+  const platform = process.platform;
+  if (platform === "darwin") {
+    execFileSync("open", [url], { stdio: "ignore" });
+    return;
+  }
+  if (platform === "win32") {
+    execFileSync("cmd", ["/c", "start", "", url], { stdio: "ignore" });
+    return;
+  }
+  execFileSync("xdg-open", [url], { stdio: "ignore" });
+}
+
+async function runBuiltInOAuthLogin(): Promise<void> {
+  const state = randomBytes(16).toString("hex");
+  const webUrl = getWebUrl();
+
+  const apiKey = await new Promise<string>((resolveKey, reject) => {
+    const server = createServer((req: IncomingMessage, res: ServerResponse) => {
+      const reqUrl = new URL(req.url || "/", `http://127.0.0.1:${port}`);
+      if (reqUrl.pathname !== "/callback") {
+        res.writeHead(404);
+        res.end("Not found");
+        return;
+      }
+
+      const receivedState = reqUrl.searchParams.get("state");
+      const token = reqUrl.searchParams.get("token");
+      const error = reqUrl.searchParams.get("error");
+
+      if (error) {
+        res.writeHead(200, { "Content-Type": "text/html" });
+        res.end(`<html><body><h2>Login failed</h2><p>${error}</p></body></html>`);
+        clearTimeout(timeout);
+        server.close();
+        reject(new Error(error));
+        return;
+      }
+
+      if (receivedState !== state) {
+        res.writeHead(400, { "Content-Type": "text/html" });
+        res.end("<html><body><h2>State mismatch</h2></body></html>");
+        return;
+      }
+
+      if (!token || !token.startsWith("sch_")) {
+        res.writeHead(400, { "Content-Type": "text/html" });
+        res.end("<html><body><h2>Invalid token</h2></body></html>");
+        return;
+      }
+
+      res.writeHead(200, { "Content-Type": "text/html" });
+      res.end("<html><body><h2>Authenticated</h2><p>You can return to terminal.</p></body></html>");
+      clearTimeout(timeout);
+      server.close();
+      resolveKey(token);
+    });
+
+    const timeout = setTimeout(() => {
+      server.close();
+      reject(new Error("Login timed out after 5 minutes"));
+    }, 5 * 60 * 1000);
+
+    let port = 0;
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      if (!address || typeof address === "string") {
+        clearTimeout(timeout);
+        server.close();
+        reject(new Error("Could not bind local callback server"));
+        return;
+      }
+
+      port = address.port;
+      const authUrl = `${webUrl}/auth/cli?port=${port}&state=${state}`;
+      console.log(`\nOpen this URL if browser does not launch:\n${authUrl}\n`);
+      try {
+        openBrowser(authUrl);
+      } catch {
+        // no-op
+      }
+    });
+  });
+
+  saveStoredConfigApiKey(apiKey);
 }
 
 function isValidApiKey(key: string | null | undefined): key is string {
@@ -75,7 +186,7 @@ function defaultApiKeyResolvers(): ApiKeyResolvers {
     envKey: () => process.env.SCHIFT_API_KEY,
     configKey: () => readStoredConfigApiKey(),
     runOAuthLogin: async () => {
-      execSync("npx @schift-io/cli auth login", { stdio: "inherit" });
+      await runBuiltInOAuthLogin();
     },
     reloadConfigKey: () => readStoredConfigApiKey(),
     log: (message: string) => console.log(message),
@@ -137,13 +248,13 @@ export async function resolveApiKey(
   resolvers.log("\nNo API key provided. Starting OAuth login with Schift CLI...\n");
   resolvers.log("1) Browser will open for Schift login");
   resolvers.log("2) Complete login and return to this terminal");
-  resolvers.log("3) If browser doesn't open, run: npx @schift-io/cli auth login\n");
+  resolvers.log("3) If browser doesn't open, open the URL shown below\n");
   await resolvers.runOAuthLogin();
 
   const refreshed = resolvers.reloadConfigKey();
   if (isValidApiKey(refreshed)) return refreshed;
 
-  throw new Error('API key is required. Run "@schift-io/cli auth login" and try again.');
+  throw new Error("API key is required. Complete browser login and try again.");
 }
 
 async function chooseAuthMode(hasExisting: boolean): Promise<AuthMode> {
