@@ -1,5 +1,7 @@
 import { collectConfig, type AuthMode } from "./prompts.js";
 import { scaffold } from "./scaffold.js";
+import { execSync } from "node:child_process";
+import { pathToFileURL } from "node:url";
 
 interface CliOptions {
   authMode?: AuthMode;
@@ -39,13 +41,26 @@ function parseCliOptions(argv: string[]): CliOptions {
   return { authMode, forceOAuth };
 }
 
+export async function runCreateSchift(argv: string[]) {
+  const options = parseCliOptions(argv);
+  const config = await collectConfig(options);
+  await scaffold(config);
+
+  if (config.template === "cs-chatbot" && config.runOnboardingDeploy !== false) {
+    console.log("\n  Running onboarding deploy for cs-chatbot...\n");
+    try {
+      execSync("schift deploy", { stdio: "inherit" });
+    } catch {
+      console.error("\n  Deploy step failed. Project scaffold is ready. Run `schift deploy` manually in your project.\n");
+    }
+  }
+}
+
 async function main() {
   console.log("\n  Welcome to Schift - The AI Agent Framework\n");
 
   try {
-    const options = parseCliOptions(process.argv.slice(2));
-    const config = await collectConfig(options);
-    await scaffold(config);
+    await runCreateSchift(process.argv.slice(2));
   } catch (err) {
     if ((err as Error).name === "ExitPromptError") {
       console.log("\nAborted.");
@@ -56,4 +71,6 @@ async function main() {
   }
 }
 
-main();
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main();
+}

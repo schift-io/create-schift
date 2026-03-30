@@ -16,6 +16,8 @@ export interface ProjectConfig {
   notionLater?: boolean;
   /** Whether user wants to connect Google Drive later */
   gdriveLater?: boolean;
+  /** Whether to run onboarding deploy after scaffold (cs-chatbot only) */
+  runOnboardingDeploy?: boolean;
 }
 
 export type AuthMode = "manual" | "oauth" | "existing";
@@ -343,5 +345,21 @@ export async function collectConfig(options: CollectConfigOptions = {}): Promise
     });
   }
 
-  return { name, template, apiKey, localDataDir, notionLater, gdriveLater };
+  let runOnboardingDeploy: boolean | undefined;
+  if (template === "cs-chatbot") {
+    runOnboardingDeploy = await confirm({
+      message: "Run deploy + smoke test now?",
+      default: true,
+    });
+  }
+
+  return {
+    name,
+    template,
+    apiKey,
+    localDataDir,
+    notionLater,
+    gdriveLater,
+    runOnboardingDeploy,
+  };
 }
