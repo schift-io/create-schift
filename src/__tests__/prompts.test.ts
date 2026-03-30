@@ -76,7 +76,7 @@ describe("resolveApiKey", () => {
     expect(logger).toHaveBeenCalledWith("\nNo API key provided. Starting OAuth login with Schift CLI...\n");
     expect(logger).toHaveBeenCalledWith("1) Browser will open for Schift login");
     expect(logger).toHaveBeenCalledWith("2) Complete login and return to this terminal");
-    expect(logger).toHaveBeenCalledWith("3) If browser doesn't open, run: npx schift auth login\n");
+    expect(logger).toHaveBeenCalledWith("3) If browser doesn't open, run: npx @schift-io/cli auth login\n");
     expect(key).toBe("sch_afteroauth123456789012345");
   });
 
@@ -90,7 +90,7 @@ describe("resolveApiKey", () => {
         log: vi.fn(),
         confirmUseExisting: vi.fn(async () => true),
       }),
-    ).rejects.toThrow('API key is required. Run "schift auth login" and try again.');
+    ).rejects.toThrow('API key is required. Run "@schift-io/cli auth login" and try again.');
   });
 });
 

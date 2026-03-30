@@ -75,7 +75,7 @@ function defaultApiKeyResolvers(): ApiKeyResolvers {
     envKey: () => process.env.SCHIFT_API_KEY,
     configKey: () => readStoredConfigApiKey(),
     runOAuthLogin: async () => {
-      execSync("npx schift auth login", { stdio: "inherit" });
+      execSync("npx @schift-io/cli auth login", { stdio: "inherit" });
     },
     reloadConfigKey: () => readStoredConfigApiKey(),
     log: (message: string) => console.log(message),
@@ -137,13 +137,13 @@ export async function resolveApiKey(
   resolvers.log("\nNo API key provided. Starting OAuth login with Schift CLI...\n");
   resolvers.log("1) Browser will open for Schift login");
   resolvers.log("2) Complete login and return to this terminal");
-  resolvers.log("3) If browser doesn't open, run: npx schift auth login\n");
+  resolvers.log("3) If browser doesn't open, run: npx @schift-io/cli auth login\n");
   await resolvers.runOAuthLogin();
 
   const refreshed = resolvers.reloadConfigKey();
   if (isValidApiKey(refreshed)) return refreshed;
 
-  throw new Error('API key is required. Run "schift auth login" and try again.');
+  throw new Error('API key is required. Run "@schift-io/cli auth login" and try again.');
 }
 
 async function chooseAuthMode(hasExisting: boolean): Promise<AuthMode> {
