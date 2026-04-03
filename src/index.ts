@@ -1,6 +1,7 @@
 import { collectConfig, type AuthMode } from "./prompts.js";
 import { scaffold } from "./scaffold.js";
 import { execSync } from "node:child_process";
+import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 interface CliOptions {
@@ -44,14 +45,15 @@ function parseCliOptions(argv: string[]): CliOptions {
 export async function runCreateSchift(argv: string[]) {
   const options = parseCliOptions(argv);
   const config = await collectConfig(options);
-  await scaffold(config);
+  const targetDir = path.resolve(process.cwd(), config.name);
+  await scaffold(config, { targetDir });
 
   if (config.template === "cs-chatbot" && config.runOnboardingDeploy !== false) {
     console.log("\n  Running onboarding deploy for cs-chatbot...\n");
     try {
-      execSync("schift deploy", { stdio: "inherit" });
+      execSync("npm run deploy", { cwd: targetDir, stdio: "inherit" });
     } catch {
-      console.error("\n  Deploy step failed. Project scaffold is ready. Run `schift deploy` manually in your project.\n");
+      console.error("\n  Deploy step failed. Project scaffold is ready. Run `npm run deploy` manually in your project.\n");
     }
   }
 }

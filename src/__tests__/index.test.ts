@@ -21,7 +21,7 @@ describe("runCreateSchift", () => {
     vi.clearAllMocks();
   });
 
-  it("runs schift deploy only for cs-chatbot template", async () => {
+  it("runs onboarding deploy inside the scaffolded project only for cs-chatbot template", async () => {
     const { runCreateSchift } = await import("../index.js");
 
     collectConfigMock.mockResolvedValueOnce({
@@ -36,7 +36,10 @@ describe("runCreateSchift", () => {
     await runCreateSchift(["--auth=manual"]);
 
     expect(scaffoldMock).toHaveBeenCalledTimes(1);
-    expect(execSyncMock).toHaveBeenCalledWith("schift deploy", expect.any(Object));
+    expect(execSyncMock).toHaveBeenCalledWith("npm run deploy", {
+      cwd: expect.stringMatching(/support-bot$/),
+      stdio: "inherit",
+    });
 
     collectConfigMock.mockResolvedValueOnce({
       name: "blank-bot",
