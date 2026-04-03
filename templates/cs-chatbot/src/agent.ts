@@ -6,6 +6,15 @@ if (!process.env.SCHIFT_API_KEY) {
   throw new Error("SCHIFT_API_KEY is required. Set it in .env");
 }
 
+const providerApiKey = process.env.SCHIFT_PROVIDER_API_KEY;
+const providerEndpointUrl = process.env.SCHIFT_PROVIDER_ENDPOINT_URL;
+
+if ((providerApiKey && !providerEndpointUrl) || (!providerApiKey && providerEndpointUrl)) {
+  throw new Error(
+    "SCHIFT_PROVIDER_API_KEY and SCHIFT_PROVIDER_ENDPOINT_URL must be set together for BYOK response generation.",
+  );
+}
+
 const schift = new Schift({ apiKey: process.env.SCHIFT_API_KEY });
 
 const bucket = process.env.SCHIFT_BUCKET ?? "support-docs";
@@ -25,5 +34,7 @@ If you don't know the answer, say so honestly. Don't make things up.`,
   rag,
   tools: [collectLead],
   model: "gpt-4o-mini",
-  transport: schift.transport,
+  ...(providerApiKey && providerEndpointUrl
+    ? { apiKey: providerApiKey, baseUrl: providerEndpointUrl }
+    : { transport: schift.transport }),
 });

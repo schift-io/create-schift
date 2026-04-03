@@ -26,14 +26,6 @@
   ],
   "author": "Schift <hello@schift.io>",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/schift-io/create-schift.git"
-  },
-  "bugs": {
-    "url": "https://github.com/schift-io/create-schift/issues"
-  },
-  "homepage": "https://github.com/schift-io/create-schift#readme",
   "dependencies": {
     "@inquirer/prompts": "^7.0.0",
     "fs-extra": "^11.0.0"

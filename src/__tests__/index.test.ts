@@ -31,22 +31,12 @@ describe("runCreateSchift", () => {
       runOnboardingDeploy: true,
     });
     scaffoldMock.mockResolvedValueOnce(undefined);
-    execSyncMock.mockImplementation((command: string) => {
-      if (command === "npm view @schift-io/cli version") return undefined;
-      if (command === "npx --yes @schift-io/cli deploy") return undefined;
-      throw new Error(`unexpected command: ${command}`);
-    });
+    execSyncMock.mockReturnValueOnce(undefined);
 
     await runCreateSchift(["--auth=manual"]);
 
     expect(scaffoldMock).toHaveBeenCalledTimes(1);
-    expect(execSyncMock).toHaveBeenCalledWith(
-      "npx --yes @schift-io/cli deploy",
-      expect.objectContaining({
-        stdio: "inherit",
-        cwd: expect.stringContaining("support-bot"),
-      }),
-    );
+    expect(execSyncMock).toHaveBeenCalledWith("schift deploy", expect.any(Object));
 
     collectConfigMock.mockResolvedValueOnce({
       name: "blank-bot",
@@ -59,9 +49,7 @@ describe("runCreateSchift", () => {
     await runCreateSchift(["--auth=manual"]);
 
     expect(scaffoldMock).toHaveBeenCalledTimes(2);
-    expect(
-      execSyncMock.mock.calls.filter(([command]) => !String(command).startsWith("npm view")).length,
-    ).toBe(1);
+    expect(execSyncMock).toHaveBeenCalledTimes(1);
   });
 
   it("does not throw when deploy step fails after scaffold", async () => {
@@ -74,12 +62,8 @@ describe("runCreateSchift", () => {
       runOnboardingDeploy: true,
     });
     scaffoldMock.mockResolvedValueOnce(undefined);
-    execSyncMock.mockImplementation((command: string) => {
-      if (command === "npm view @schift-io/cli version") return undefined;
-      if (command === "npx --yes @schift-io/cli deploy") {
-        throw new Error("deploy failed");
-      }
-      throw new Error(`unexpected command: ${command}`);
+    execSyncMock.mockImplementationOnce(() => {
+      throw new Error("deploy failed");
     });
 
     await expect(runCreateSchift(["--auth=manual"])).resolves.toBeUndefined();
@@ -99,34 +83,5 @@ describe("runCreateSchift", () => {
     await runCreateSchift(["--auth=manual"]);
 
     expect(execSyncMock).not.toHaveBeenCalled();
-  });
-
-  it("throws when onboarding deploy is enabled but no CLI package is available", async () => {
-    const { runCreateSchift } = await import("../index.js");
-
-    collectConfigMock.mockResolvedValueOnce({
-      name: "support-bot",
-      template: "cs-chatbot",
-      apiKey: "sch_test123456789012345",
-      runOnboardingDeploy: true,
-    });
-    scaffoldMock.mockResolvedValueOnce(undefined);
-    execSyncMock.mockImplementation((command: string) => {
-      if (command.startsWith("npm view")) {
-        throw new Error("E404");
-      }
-      return undefined;
-    });
-
-    await expect(runCreateSchift(["--auth=manual"])).rejects.toThrow(
-      "Deploy CLI package was not found on npm",
-    );
-
-    expect(execSyncMock).toHaveBeenCalledWith("npm view @schift-io/cli version", expect.any(Object));
-    expect(execSyncMock).toHaveBeenCalledWith("npm view schift version", expect.any(Object));
-    expect(execSyncMock).not.toHaveBeenCalledWith(
-      expect.stringContaining("npx --yes"),
-      expect.any(Object),
-    );
   });
 });

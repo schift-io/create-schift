@@ -43,7 +43,7 @@ describe("scaffold", () => {
     expect(env).toContain("sch_abc123");
   });
 
-  it("creates .env from .env.example with API key", async () => {
+  it("creates .env from .env.example with API key and BYOK placeholders", async () => {
     const projectDir = path.join(tmpDir, "test-agent");
     await scaffold(
       { name: "test-agent", template: "blank", apiKey: "sch_xyz" },
@@ -52,6 +52,8 @@ describe("scaffold", () => {
 
     const env = await fs.readFile(path.join(projectDir, ".env"), "utf-8");
     expect(env).toContain("SCHIFT_API_KEY=sch_xyz");
+    expect(env).toContain("SCHIFT_PROVIDER_API_KEY=");
+    expect(env).toContain("SCHIFT_PROVIDER_ENDPOINT_URL=");
   });
 
   it("throws if target directory already exists", async () => {
@@ -96,6 +98,12 @@ describe("scaffold", () => {
 
     const agent = await fs.readFile(path.join(projectDir, "src", "agent.ts"), "utf-8");
     expect(agent).toContain('"support-bot"');
+    expect(agent).toContain("SCHIFT_PROVIDER_API_KEY");
+    expect(agent).toContain("SCHIFT_PROVIDER_ENDPOINT_URL");
+
+    const env = await fs.readFile(path.join(projectDir, ".env"), "utf-8");
+    expect(env).toContain("SCHIFT_PROVIDER_API_KEY=");
+    expect(env).toContain("SCHIFT_PROVIDER_ENDPOINT_URL=");
   });
 
   it("throws for invalid template name", async () => {
@@ -106,6 +114,19 @@ describe("scaffold", () => {
         { targetDir: projectDir, skipInstall: true },
       ),
     ).rejects.toThrow("not found");
+  });
+
+  it("scaffolded agent validates incomplete BYOK configuration", async () => {
+    const projectDir = path.join(tmpDir, "byok-agent");
+    await scaffold(
+      { name: "byok-agent", template: "blank", apiKey: "sch_test123" },
+      { targetDir: projectDir, skipInstall: true },
+    );
+
+    const agent = await fs.readFile(path.join(projectDir, "src", "agent.ts"), "utf-8");
+    expect(agent).toContain(
+      "SCHIFT_PROVIDER_API_KEY and SCHIFT_PROVIDER_ENDPOINT_URL must be set together",
+    );
   });
 
   // ── Scenario #50: .gitignore includes .env ──

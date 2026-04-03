@@ -160,6 +160,11 @@ export async function scaffold(
     console.log(`    schift deploy          # deploy to Schift Cloud`);
   }
 
+  console.log(`\n  Notes:`);
+  console.log(`    - SCHIFT_API_KEY powers Schift search/RAG and deploy access`);
+  console.log(`    - For free/BYOK response generation, set both SCHIFT_PROVIDER_API_KEY and SCHIFT_PROVIDER_ENDPOINT_URL in .env`);
+  console.log(`    - SCHIFT_PROVIDER_ENDPOINT_URL should be an OpenAI-compatible base URL`);
+
   if (config.notionLater || config.gdriveLater) {
     console.log(`\n  Connect data sources at: https://schift.io/app`);
     if (config.notionLater) console.log(`    - Notion`);

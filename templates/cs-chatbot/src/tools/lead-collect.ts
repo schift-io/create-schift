@@ -4,6 +4,7 @@ const LEADS_ENDPOINT = "https://api.schift.io/v1/leads";
 
 export const collectLead: AgentTool = {
   name: "collect_lead",
+  maxCallsPerRun: 1,
   description:
     "Collect a potential customer's contact info (name, email, phone). " +
     "Use when the user expresses interest in pricing, a demo, or wants to learn more.",

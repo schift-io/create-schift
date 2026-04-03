@@ -1,28 +1,7 @@
 import { collectConfig, type AuthMode } from "./prompts.js";
 import { scaffold } from "./scaffold.js";
 import { execSync } from "node:child_process";
-import path from "node:path";
-
-function hasNpmPackage(packageName: string): boolean {
-  try {
-    execSync(`npm view ${packageName} version`, { stdio: "pipe" });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function resolveDeployCommand(): string | null {
-  if (hasNpmPackage("@schift-io/cli")) {
-    return "npx --yes @schift-io/cli deploy";
-  }
-
-  if (hasNpmPackage("schift")) {
-    return "npx --yes schift deploy";
-  }
-
-  return null;
-}
+import { pathToFileURL } from "node:url";
 
 interface CliOptions {
   authMode?: AuthMode;
@@ -69,23 +48,10 @@ export async function runCreateSchift(argv: string[]) {
 
   if (config.template === "cs-chatbot" && config.runOnboardingDeploy !== false) {
     console.log("\n  Running onboarding deploy for cs-chatbot...\n");
-    const deployCommand = resolveDeployCommand();
-
-    if (!deployCommand) {
-      throw new Error(
-        "Deploy CLI package was not found on npm. Project scaffold is ready. Publish/install Schift CLI, then run deploy manually.",
-      );
-    }
-
     try {
-      execSync(deployCommand, {
-        stdio: "inherit",
-        cwd: path.resolve(process.cwd(), config.name),
-      });
+      execSync("schift deploy", { stdio: "inherit" });
     } catch {
-      console.error(
-        `\n  Deploy step failed. Project scaffold is ready. Run \`${deployCommand}\` in your project.\n`,
-      );
+      console.error("\n  Deploy step failed. Project scaffold is ready. Run `schift deploy` manually in your project.\n");
     }
   }
 }
@@ -105,6 +71,6 @@ async function main() {
   }
 }
 
-if (!process.env.VITEST) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   main();
 }
