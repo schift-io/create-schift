@@ -85,6 +85,7 @@ export async function scaffold(
 
   const vars: Record<string, string> = {
     PROJECT_NAME: config.name,
+    PROJECT_SLUG: config.name,
     API_KEY: config.apiKey,
   };
 

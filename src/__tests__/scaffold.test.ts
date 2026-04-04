@@ -104,6 +104,16 @@ describe("scaffold", () => {
     const env = await fs.readFile(path.join(projectDir, ".env"), "utf-8");
     expect(env).toContain("SCHIFT_PROVIDER_API_KEY=");
     expect(env).toContain("SCHIFT_PROVIDER_ENDPOINT_URL=");
+
+    const pkg = await fs.readJson(path.join(projectDir, "package.json"));
+    expect(pkg.scripts.dev).toBe("npx tsx src/server.ts");
+    expect(pkg.scripts.deploy).toBe("npx schift deploy");
+    expect(pkg.dependencies.express).toBe("^5.1.0");
+    expect(pkg.dependencies.cors).toBe("^2.8.5");
+    expect(pkg.dependencies.dotenv).toBe("^16.0.0");
+    expect(pkg.devDependencies["@types/express"]).toBe("^5.0.0");
+    expect(pkg.devDependencies["@types/cors"]).toBe("^2.8.0");
+    expect(pkg.devDependencies["@schift-io/cli"]).toBe("^0.1.0");
   });
 
   it("throws for invalid template name", async () => {
@@ -142,18 +152,20 @@ describe("scaffold", () => {
     expect(gitignore).toContain("node_modules");
   });
 
-  // ── Scenario #35: engines field in package.json ──
-  it("scaffolded project specifies engines.node >= 20", async () => {
+  it("scaffolded project includes deploy script and local CLI dependency", async () => {
     for (const template of ["blank", "cs-chatbot"]) {
-      const projectDir = path.join(tmpDir, `engines-${template}`);
+      const projectDir = path.join(tmpDir, `deploy-${template}`);
       await scaffold(
-        { name: `engines-${template}`, template, apiKey: "sch_test123456789012" },
+        { name: `deploy-${template}`, template, apiKey: "sch_test123456789012" },
         { targetDir: projectDir, skipInstall: true },
       );
 
       const pkg = await fs.readJson(path.join(projectDir, "package.json"));
-      expect(pkg.engines).toBeDefined();
-      expect(pkg.engines.node).toContain("20");
+      expect(pkg.scripts.deploy).toBe("npx schift deploy");
+      if (template === "cs-chatbot") {
+        expect(pkg.scripts.dev).toBe("npx tsx src/server.ts");
+      }
+      expect(pkg.devDependencies["@schift-io/cli"]).toBe("^0.1.0");
     }
   });
 });
