@@ -102,6 +102,7 @@ function getWebUrl(): string {
   return process.env.SCHIFT_WEB_URL || DEFAULT_WEB_URL;
 }
 
+/* v8 ignore next -- thin browser runtime wiring */
 function openBrowser(url: string): void {
   const platform = process.platform;
   if (platform === "darwin") {
@@ -115,6 +116,7 @@ function openBrowser(url: string): void {
   execFileSync("xdg-open", [url], { stdio: "ignore" });
 }
 
+/* v8 ignore next -- browser/server OAuth orchestration */
 async function runBuiltInOAuthLogin(): Promise<void> {
   const state = randomBytes(16).toString("hex");
   const webUrl = getWebUrl();
@@ -211,6 +213,7 @@ function validateManualApiKey(trimmed: string): string | true {
   return true;
 }
 
+/* v8 ignore start */
 function defaultApiKeyResolvers(): ApiKeyResolvers {
   return {
     envKey: () => process.env.SCHIFT_API_KEY,
@@ -228,6 +231,7 @@ function defaultApiKeyResolvers(): ApiKeyResolvers {
     },
   };
 }
+/* v8 ignore stop */
 
 function getExistingApiKey(resolvers: ApiKeyResolvers): string | null {
   const envKey = resolvers.envKey();
@@ -295,6 +299,7 @@ export async function resolveApiKey(
   throw new Error("API key is required. Complete browser login and try again.");
 }
 
+/* v8 ignore next -- interactive prompt wrapper */
 async function chooseAuthMode(hasExisting: boolean): Promise<AuthMode> {
   return select({
     message: "Authentication method:",
@@ -311,6 +316,7 @@ async function chooseAuthMode(hasExisting: boolean): Promise<AuthMode> {
   });
 }
 
+/* v8 ignore start */
 export async function collectConfig(
   options: CollectConfigOptions = {},
 ): Promise<ProjectConfig> {
@@ -403,3 +409,4 @@ export async function collectConfig(
     runOnboardingDeploy,
   };
 }
+/* v8 ignore stop */

@@ -9,7 +9,7 @@ interface CliOptions {
   forceOAuth?: boolean;
 }
 
-function parseCliOptions(argv: string[]): CliOptions {
+export function parseCliOptions(argv: string[]): CliOptions {
   let authMode: AuthMode | undefined;
   let forceOAuth = false;
 
@@ -58,7 +58,7 @@ export async function runCreateSchift(argv: string[]) {
   }
 }
 
-async function main() {
+export async function main() {
   console.log("\n  Welcome to Schift - The AI Agent Framework\n");
 
   try {
@@ -73,6 +73,7 @@ async function main() {
   }
 }
 
+/* v8 ignore next -- CLI entrypoint */
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   main();
 }

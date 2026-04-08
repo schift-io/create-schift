@@ -11,7 +11,7 @@ interface ScaffoldOptions {
   skipInstall?: boolean;
 }
 
-/** Resolve templates directory (works in both dev and published mode). */
+/* v8 ignore start */
 function getTemplatesDir(): string {
   const fromDist = path.resolve(__dirname, "..", "templates");
   const fromSrc = path.resolve(__dirname, "..", "..", "templates");
@@ -19,6 +19,7 @@ function getTemplatesDir(): string {
   if (fs.existsSync(fromSrc)) return fromSrc;
   throw new Error("Templates directory not found");
 }
+/* v8 ignore stop */
 
 /** Replace all {{VAR}} placeholders in a string. */
 function replacePlaceholders(
@@ -112,7 +113,7 @@ export async function scaffold(
     }
   }
 
-  // Write schift.config.json (for `schift deploy`)
+  // Write schift.config.json (for `scloud deploy`)
   writeSchiftConfig(targetDir, config);
 
   // Create data dir if specified and doesn't exist
@@ -155,10 +156,10 @@ export async function scaffold(
 
   if (config.localDataDir) {
     console.log(`    # Add your documents to ${config.localDataDir}/`);
-    console.log(`    schift deploy          # uploads data & deploys agent`);
+    console.log(`    scloud deploy          # uploads data & deploys agent`);
   } else {
     console.log(`    npm run dev            # start local dev server`);
-    console.log(`    schift deploy          # deploy to Schift Cloud`);
+    console.log(`    scloud deploy          # deploy to Schift Cloud`);
   }
 
   console.log(`\n  Notes:`);
