@@ -113,7 +113,7 @@ export async function scaffold(
     }
   }
 
-  // Write schift.config.json (for `scloud deploy`)
+  // Write schift.config.json (for `schift deploy`)
   writeSchiftConfig(targetDir, config);
 
   // Create data dir if specified and doesn't exist
@@ -156,10 +156,10 @@ export async function scaffold(
 
   if (config.localDataDir) {
     console.log(`    # Add your documents to ${config.localDataDir}/`);
-    console.log(`    scloud deploy          # uploads data & deploys agent`);
+    console.log(`    schift deploy          # uploads data & deploys agent`);
   } else {
     console.log(`    npm run dev            # start local dev server`);
-    console.log(`    scloud deploy          # deploy to Schift Cloud`);
+    console.log(`    schift deploy          # deploy to Schift Cloud`);
   }
 
   console.log(`\n  Notes:`);

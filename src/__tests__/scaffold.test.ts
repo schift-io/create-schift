@@ -130,7 +130,7 @@ describe("scaffold", () => {
 
     const pkg = await fs.readJson(path.join(projectDir, "package.json"));
     expect(pkg.scripts.dev).toBe("npx tsx src/server.ts");
-    expect(pkg.scripts.deploy).toBe("npx scloud deploy");
+    expect(pkg.scripts.deploy).toBe("npx schift deploy");
     expect(pkg.dependencies.express).toBe("^5.1.0");
     expect(pkg.dependencies.cors).toBe("^2.8.5");
     expect(pkg.dependencies.dotenv).toBe("^16.0.0");
@@ -212,7 +212,7 @@ describe("scaffold", () => {
 
     const output = logSpy.mock.calls.map(([msg]) => String(msg)).join("\n");
     expect(output).toContain("# Add your documents to ./data/");
-    expect(output).toContain("scloud deploy          # uploads data & deploys agent");
+    expect(output).toContain("schift deploy          # uploads data & deploys agent");
     expect(output).toContain("Connect data sources at: https://schift.io/app");
     expect(output).toContain("    - Notion");
     expect(output).toContain("    - Google Drive");
@@ -227,7 +227,7 @@ describe("scaffold", () => {
 
     const output = logSpy.mock.calls.map(([msg]) => String(msg)).join("\n");
     expect(output).toContain("npm run dev            # start local dev server");
-    expect(output).toContain("scloud deploy          # deploy to Schift Cloud");
+    expect(output).toContain("schift deploy          # deploy to Schift Cloud");
   });
 
   it("creates absolute local data dir outside project", async () => {
@@ -256,7 +256,7 @@ describe("scaffold", () => {
       );
 
       const pkg = await fs.readJson(path.join(projectDir, "package.json"));
-      expect(pkg.scripts.deploy).toBe("npx scloud deploy");
+      expect(pkg.scripts.deploy).toBe("npx schift deploy");
       if (template === "cs-chatbot") {
         expect(pkg.scripts.dev).toBe("npx tsx src/server.ts");
       }
