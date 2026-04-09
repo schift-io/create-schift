@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const promptMocks = vi.hoisted(() => ({
   inputMock: vi.fn(),
@@ -18,8 +18,19 @@ const { inputMock, selectMock, checkboxMock, confirmMock } = promptMocks;
 
 import { resolveApiKey, resolveExistingApiKey, collectConfig } from "../prompts.js";
 
+const originalSchiftApiKey = process.env.SCHIFT_API_KEY;
+
 beforeEach(() => {
   vi.clearAllMocks();
+  delete process.env.SCHIFT_API_KEY;
+});
+
+afterEach(() => {
+  if (originalSchiftApiKey === undefined) {
+    delete process.env.SCHIFT_API_KEY;
+  } else {
+    process.env.SCHIFT_API_KEY = originalSchiftApiKey;
+  }
 });
 
 describe("resolveApiKey", () => {
