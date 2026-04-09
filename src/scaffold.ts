@@ -144,7 +144,7 @@ export async function scaffold(
     cd ${config.name}
     npm install
 `);
-      return;
+      throw new Error(`npm install failed in ${config.name}`);
     }
   }
 

@@ -53,6 +53,7 @@ export async function runCreateSchift(argv: string[]) {
       execSync("npm run deploy", { cwd: targetDir, stdio: "inherit" });
     } catch {
       console.error("\n  Deploy step failed. Project scaffold is ready. Run `npm run deploy` manually in your project.\n");
+      throw new Error(`onboarding deploy failed in ${config.name}`);
     }
   }
 }

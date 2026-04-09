@@ -102,7 +102,7 @@ describe("runCreateSchift", () => {
     expect(execSyncMock).toHaveBeenCalledTimes(1);
   });
 
-  it("does not throw when deploy step fails after scaffold and logs recovery", async () => {
+  it("throws when deploy step fails after scaffold and logs recovery", async () => {
     const { runCreateSchift } = await import("../index.js");
 
     collectConfigMock.mockResolvedValueOnce({
@@ -116,7 +116,7 @@ describe("runCreateSchift", () => {
       throw new Error("deploy failed");
     });
 
-    await expect(runCreateSchift(["--auth=manual"])).resolves.toBeUndefined();
+    await expect(runCreateSchift(["--auth=manual"])).rejects.toThrow("onboarding deploy failed in support-bot");
     expect(errorSpy).toHaveBeenCalledWith(
       "\n  Deploy step failed. Project scaffold is ready. Run `npm run deploy` manually in your project.\n",
     );

@@ -277,16 +277,18 @@ describe("scaffold", () => {
     expect(execSyncMock).toHaveBeenCalledWith("npm install", { cwd: projectDir, stdio: "inherit" });
   });
 
-  it("logs manual recovery when npm install fails", async () => {
+  it("throws after logging manual recovery when npm install fails", async () => {
     execSyncMock.mockImplementation(() => {
       throw new Error("install failed");
     });
     const projectDir = path.join(tmpDir, "install-fail-agent");
 
-    await scaffold(
-      { name: "install-fail-agent", template: "blank", apiKey: "sch_test123456789012" },
-      { targetDir: projectDir, skipInstall: false },
-    );
+    await expect(
+      scaffold(
+        { name: "install-fail-agent", template: "blank", apiKey: "sch_test123456789012" },
+        { targetDir: projectDir, skipInstall: false },
+      ),
+    ).rejects.toThrow("npm install failed in install-fail-agent");
 
     const errorOutput = errorSpy.mock.calls.map(([msg]) => String(msg)).join("\n");
     expect(errorOutput).toContain("npm install failed. The project was scaffolded at:");
