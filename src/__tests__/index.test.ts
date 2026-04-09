@@ -67,7 +67,7 @@ describe("runCreateSchift", () => {
     vi.unstubAllGlobals();
   });
 
-  it("passes parsed options into collectConfig and runs onboarding deploy only for cs-chatbot", async () => {
+  it("passes parsed options into collectConfig and runs onboarding deploy for any template", async () => {
     const { runCreateSchift } = await import("../index.js");
 
     collectConfigMock.mockResolvedValueOnce({
@@ -83,23 +83,33 @@ describe("runCreateSchift", () => {
 
     expect(collectConfigMock).toHaveBeenCalledWith({ authMode: "manual", forceOAuth: false });
     expect(scaffoldMock).toHaveBeenCalledTimes(1);
-    expect(execSyncMock).toHaveBeenCalledWith("npm run deploy", {
+    expect(execSyncMock).toHaveBeenNthCalledWith(1, "npm run deploy", {
       cwd: expect.stringMatching(/support-bot$/),
       stdio: "inherit",
+      env: expect.objectContaining({
+        SCHIFT_API_KEY: "sch_test123456789012345",
+      }),
     });
 
     collectConfigMock.mockResolvedValueOnce({
       name: "blank-bot",
       template: "blank",
-      apiKey: "sch_test123456789012345",
+      apiKey: "sch_testblank1234567890",
       runOnboardingDeploy: true,
     });
     scaffoldMock.mockResolvedValueOnce(undefined);
+    execSyncMock.mockReturnValueOnce(undefined);
 
     await runCreateSchift(["--auth=manual"]);
 
     expect(scaffoldMock).toHaveBeenCalledTimes(2);
-    expect(execSyncMock).toHaveBeenCalledTimes(1);
+    expect(execSyncMock).toHaveBeenNthCalledWith(2, "npm run deploy", {
+      cwd: expect.stringMatching(/blank-bot$/),
+      stdio: "inherit",
+      env: expect.objectContaining({
+        SCHIFT_API_KEY: "sch_testblank1234567890",
+      }),
+    });
   });
 
   it("throws when deploy step fails after scaffold and logs recovery", async () => {
@@ -122,7 +132,7 @@ describe("runCreateSchift", () => {
     );
   });
 
-  it("skips deploy when cs-chatbot onboarding deploy is disabled", async () => {
+  it("skips deploy when onboarding deploy is disabled", async () => {
     const { runCreateSchift } = await import("../index.js");
 
     collectConfigMock.mockResolvedValueOnce({

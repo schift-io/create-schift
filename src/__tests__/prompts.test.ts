@@ -167,15 +167,19 @@ describe("collectConfig", () => {
       gdriveLater: true,
       runOnboardingDeploy: true,
     });
+    expect(confirmMock).toHaveBeenCalledWith(
+      expect.objectContaining({ message: "Run deploy now? (includes smoke test)" }),
+    );
   });
 
-  it("collects local data dir without onboarding deploy for blank template", async () => {
+  it("collects local data dir with onboarding deploy confirm for blank template", async () => {
     inputMock
       .mockResolvedValueOnce("blank-bot")
       .mockResolvedValueOnce("sch_manual123456789012345")
       .mockResolvedValueOnce("/tmp/docs");
     selectMock.mockResolvedValueOnce("blank");
     checkboxMock.mockResolvedValueOnce(["local"]);
+    confirmMock.mockResolvedValueOnce(true);
 
     const config = await collectConfig({ authMode: "manual" });
 
@@ -186,9 +190,11 @@ describe("collectConfig", () => {
       localDataDir: "/tmp/docs",
       notionLater: false,
       gdriveLater: false,
-      runOnboardingDeploy: undefined,
+      runOnboardingDeploy: true,
     });
-    expect(confirmMock).not.toHaveBeenCalled();
+    expect(confirmMock).toHaveBeenCalledWith(
+      expect.objectContaining({ message: "Run deploy now? (includes smoke test)" }),
+    );
   });
 
   it("collects cs-chatbot config with deploy confirm false", async () => {
@@ -202,6 +208,9 @@ describe("collectConfig", () => {
     const config = await collectConfig({ authMode: "manual" });
 
     expect(config.runOnboardingDeploy).toBe(false);
+    expect(confirmMock).toHaveBeenCalledWith(
+      expect.objectContaining({ message: "Run deploy now? (includes smoke test)" }),
+    );
   });
 
   it("throws for invalid forceOAuth and authMode combination", async () => {

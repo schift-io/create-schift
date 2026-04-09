@@ -395,13 +395,10 @@ export async function collectConfig(
     });
   }
 
-  let runOnboardingDeploy: boolean | undefined;
-  if (template === "cs-chatbot") {
-    runOnboardingDeploy = await confirm({
-      message: "Run deploy + smoke test now?",
-      default: true,
-    });
-  }
+  const runOnboardingDeploy = await confirm({
+    message: "Run deploy now? (includes smoke test)",
+    default: true,
+  });
 
   return {
     name,

@@ -47,10 +47,14 @@ export async function runCreateSchift(argv: string[]) {
   const targetDir = path.resolve(process.cwd(), config.name);
   await scaffold(config, { targetDir });
 
-  if (config.template === "cs-chatbot" && config.runOnboardingDeploy !== false) {
-    console.log("\n  Running onboarding deploy for cs-chatbot...\n");
+  if (config.runOnboardingDeploy !== false) {
+    console.log(`\n  Running onboarding deploy for ${config.template}...\n`);
     try {
-      execSync("npm run deploy", { cwd: targetDir, stdio: "inherit" });
+      execSync("npm run deploy", {
+        cwd: targetDir,
+        stdio: "inherit",
+        env: { ...process.env, SCHIFT_API_KEY: config.apiKey },
+      });
     } catch {
       console.error("\n  Deploy step failed. Project scaffold is ready. Run `npm run deploy` manually in your project.\n");
       throw new Error(`onboarding deploy failed in ${config.name}`);
