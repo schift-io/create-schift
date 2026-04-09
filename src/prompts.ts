@@ -39,6 +39,10 @@ export interface CollectConfigOptions {
 
 export const TEMPLATES = [
   {
+    name: "managed-agent  - Cloud-managed agent with RAG (recommended)",
+    value: "managed-agent",
+  },
+  {
     name: "cs-chatbot     - Customer support agent with RAG",
     value: "cs-chatbot",
   },
