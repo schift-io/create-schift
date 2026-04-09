@@ -2,7 +2,6 @@ import { collectConfig, type AuthMode } from "./prompts.js";
 import { scaffold } from "./scaffold.js";
 import { execSync } from "node:child_process";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
 
 interface CliOptions {
   authMode?: AuthMode;
@@ -73,7 +72,3 @@ export async function main() {
   }
 }
 
-/* v8 ignore next -- CLI entrypoint */
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main();
-}

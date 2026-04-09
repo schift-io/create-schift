@@ -1,10 +1,10 @@
 {
   "name": "create-schift",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "description": "Create a new Schift AI agent project",
   "type": "module",
   "bin": {
-    "create-schift": "dist/index.js"
+    "create-schift": "dist/cli.js"
   },
   "files": [
     "dist",
