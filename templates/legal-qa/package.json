@@ -8,7 +8,9 @@
   },
   "scripts": {
     "dev": "npx tsx src/server.ts",
-    "deploy": "npx schift deploy"
+    "build": "tsc",
+    "deploy": "npx schift deploy",
+    "seed": "npx tsx src/seed.ts"
   },
   "dependencies": {
     "@schift-io/sdk": "^0.7.1",

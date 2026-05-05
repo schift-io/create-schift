@@ -39,14 +39,34 @@ export interface CollectConfigOptions {
 
 export const TEMPLATES = [
   {
-    name: "managed-agent  - Cloud-managed agent with RAG (recommended)",
+    name: "managed-agent      - Cloud-managed agent with RAG (recommended)",
     value: "managed-agent",
   },
   {
-    name: "cs-chatbot     - Customer support agent with RAG",
+    name: "cs-chatbot         - Customer support agent with RAG",
     value: "cs-chatbot",
   },
-  { name: "blank          - Empty agent project", value: "blank" },
+  {
+    name: "legal-qa           - Korean legal Q&A + draft agent (Legalize.kr스타터)",
+    value: "legal-qa",
+  },
+  {
+    name: "law-firm-chatbot   - 로펌 의뢰인 1차 상담 + 변호사 배정",
+    value: "law-firm-chatbot",
+  },
+  {
+    name: "contract-review    - 계약서 리뷰 (클라이언트 PII 마스킹 + 의견 초안)",
+    value: "contract-review",
+  },
+  {
+    name: "case-intake        - 사건 인테이크 (요약·쟁점·적용 법령 자동)",
+    value: "case-intake",
+  },
+  {
+    name: "compliance-monitor - 규정 위반 모니터 (금융·공공 컴플라이언스)",
+    value: "compliance-monitor",
+  },
+  { name: "blank              - Empty agent project", value: "blank" },
 ] as const;
 
 const DATA_SOURCES = [

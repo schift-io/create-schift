@@ -7,14 +7,20 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "npx tsx src/agent.ts",
+    "dev": "npx tsx src/server.ts",
+    "build": "tsc",
     "deploy": "npx schift deploy"
   },
   "dependencies": {
-    "@schift-io/sdk": "^0.7.1"
+    "@schift-io/sdk": "^0.7.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "express": "^5.1.0"
   },
   "devDependencies": {
     "@schift-io/cli": "^0.1.9",
+    "@types/cors": "^2.8.0",
+    "@types/express": "^5.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.5.0"
   }

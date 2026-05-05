@@ -1,0 +1,9 @@
+{
+  "template": "case-intake",
+  "features": ["intake-form", "issue-extraction", "statute-matching"],
+  "locale": "ko",
+  "agent": {
+    "name": "{{PROJECT_NAME}}",
+    "model": "gpt-4o-mini"
+  }
+}

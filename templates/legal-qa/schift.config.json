@@ -1,0 +1,13 @@
+{
+  "template": "legal-qa",
+  "features": ["qa", "draft"],
+  "locale": "ko",
+  "agent": {
+    "name": "{{PROJECT_NAME}}",
+    "model": "gpt-4o-mini"
+  },
+  "rag": {
+    "bucket": "legal-corpus",
+    "topK": 6
+  }
+}

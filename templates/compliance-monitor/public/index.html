@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{PROJECT_NAME}} — 컴플라이언스 모니터</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, 'Pretendard', sans-serif; background: #0b0d10; color: #e5e5e5; min-height: 100vh; }
+    header { padding: 16px 24px; border-bottom: 1px solid #1d2127; display: flex; gap: 12px; align-items: center; }
+    header h1 { font-size: 16px; color: #fff; font-weight: 600; }
+    .badge { font-size: 11px; padding: 2px 8px; border-radius: 9999px; background: #1a3a2a; color: #4ade80; }
+    main { padding: 24px; max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .panel { background: #151a21; border: 1px solid #253040; border-radius: 12px; padding: 18px; }
+    textarea { width: 100%; min-height: 160px; padding: 12px; background: #0f131a; border: 1px solid #2a3446; color: #fff; border-radius: 8px; font-size: 13px; font-family: monospace; resize: vertical; }
+    input { width: 100%; padding: 10px 12px; background: #0f131a; border: 1px solid #2a3446; color: #fff; border-radius: 6px; font-size: 13px; margin-top: 8px; }
+    button { margin-top: 12px; padding: 10px 20px; background: #1d4ed8; color: #fff; border: 0; border-radius: 8px; cursor: pointer; font-weight: 500; }
+    .verdict { white-space: pre-wrap; line-height: 1.7; font-size: 14px; min-height: 160px; }
+    .note { font-size: 11.5px; color: #94a3b8; }
+    .audit { grid-column: 1 / -1; }
+    .audit-row { font-size: 12px; color: #94a3b8; padding: 6px 0; border-bottom: 1px dashed #1d2127; }
+    .setup { margin: 40px auto; max-width: 540px; padding: 24px; background: #151a21; border: 1px solid #253040; border-radius: 12px; }
+    .setup a { color: #60a5fa; } .setup code { display: block; padding: 8px; background: #0a0d12; border-radius: 6px; margin: 6px 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>{{PROJECT_NAME}} — 컴플라이언스 모니터</h1>
+    <span class="badge">Schift Cloud</span>
+    <span class="note">규정 문서 bucket 질의 · PII 자동 마스킹 · 감사 로그</span>
+  </header>
+
+  <div id="setup" class="setup" style="display:none">
+    <h2>설정 필요</h2>
+    <p>Schift Cloud API 키 + 규정 bucket ID가 필요합니다.</p>
+    <ol style="padding-left:20px;line-height:1.9;">
+      <li><a href="https://app.schift.io/api-keys" target="_blank">app.schift.io/api-keys</a> 에서 키 발급</li>
+      <li>대시보드에서 규정 bucket 생성 → ID 복사</li>
+      <li><code>.env</code>에 <b>SCHIFT_API_KEY</b>, <b>SCHIFT_BUCKET_ID</b> 입력 후 재시작</li>
+    </ol>
+  </div>
+
+  <main id="main">
+    <div class="panel">
+      <h2>거래 설명 (PII 자동 마스킹)</h2>
+      <textarea id="txn" placeholder="예: 2026-04-18 고객 A가 6,500만원 현금 입금 후 동일 일자 홍콩 계좌로 전액 송금..."></textarea>
+      <input id="question" placeholder="추가 질문 (선택) — 어떤 규정 위반 가능성이 있나요?" />
+      <button onclick="runMonitor()">모니터링 실행</button>
+    </div>
+    <div class="panel">
+      <h2>판정 결과</h2>
+      <div id="out" class="verdict note">거래 설명 입력 후 모니터링 실행을 눌러주세요.</div>
+      <div id="meta" class="note" style="margin-top:10px;"></div>
+    </div>
+    <div class="panel audit">
+      <h2>감사 로그 (최근 200건)</h2>
+      <div id="audit"></div>
+    </div>
+  </main>
+
+  <script>
+    (async () => {
+      const r = await fetch("/api/health").then((x) => x.json());
+      if (r.status !== "ok") {
+        document.getElementById("setup").style.display = "block";
+        document.getElementById("main").style.display = "none";
+        return;
+      }
+      loadAudit();
+    })();
+
+    async function loadAudit() {
+      const r = await fetch("/api/audit").then((x) => x.json());
+      const el = document.getElementById("audit");
+      el.innerHTML = (r.records || [])
+        .slice(-20)
+        .reverse()
+        .map((x) => `<div class="audit-row">${x.at} — masked=${x.redactedCount} — ${x.query.slice(0,100)}</div>`)
+        .join("") || '<div class="note">기록 없음</div>';
+    }
+
+    async function runMonitor() {
+      const txn = document.getElementById("txn").value.trim();
+      const question = document.getElementById("question").value.trim();
+      if (!txn) return;
+      document.getElementById("out").textContent = "분석 중...";
+      const resp = await fetch("/api/monitor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transaction: txn, question }),
+      });
+      const data = await resp.json();
+      document.getElementById("out").textContent = data.verdict ?? data.error ?? "응답 없음";
+      document.getElementById("meta").textContent = data.redaction
+        ? `PII ${data.redaction.entityCount}건 마스킹 · 정책 ${data.redaction.policy}`
+        : "";
+      loadAudit();
+    }
+  </script>
+</body>
+</html>

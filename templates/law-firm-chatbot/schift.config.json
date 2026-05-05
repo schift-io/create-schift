@@ -1,0 +1,9 @@
+{
+  "template": "law-firm-chatbot",
+  "features": ["qa", "assignment"],
+  "locale": "ko",
+  "agent": {
+    "name": "{{PROJECT_NAME}}",
+    "model": "gpt-4o-mini"
+  }
+}

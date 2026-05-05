@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{PROJECT_NAME}} — 사건 인테이크</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, 'Pretendard', sans-serif; background: #0b0d10; color: #e5e5e5; min-height: 100vh; }
+    header { padding: 16px 24px; border-bottom: 1px solid #1d2127; display: flex; gap: 12px; align-items: center; }
+    header h1 { font-size: 16px; color: #fff; font-weight: 600; }
+    .badge { font-size: 11px; padding: 2px 8px; border-radius: 9999px; background: #1a3a2a; color: #4ade80; }
+    main { padding: 24px; display: grid; grid-template-columns: 420px 1fr; gap: 20px; max-width: 1200px; margin: 0 auto; }
+    .panel { background: #151a21; border: 1px solid #253040; border-radius: 12px; padding: 18px; }
+    .panel h2 { font-size: 14px; margin-bottom: 14px; color: #fff; }
+    label { display: block; font-size: 12px; color: #94a3b8; margin: 10px 0 4px; }
+    input, textarea, select { width: 100%; padding: 10px 12px; background: #0f131a; border: 1px solid #2a3446; color: #fff; border-radius: 6px; font-size: 13px; }
+    textarea { min-height: 140px; resize: vertical; }
+    button { margin-top: 14px; padding: 10px 20px; background: #1d4ed8; color: #fff; border: 0; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 500; }
+    .out { white-space: pre-wrap; line-height: 1.75; font-size: 14px; min-height: 200px; color: #cbd5e1; }
+    .sources { margin-top: 18px; padding-top: 14px; border-top: 1px solid #1d2127; }
+    .src-item { font-size: 12px; color: #94a3b8; margin: 6px 0; }
+    .setup { margin: 40px auto; max-width: 540px; padding: 24px; background: #151a21; border: 1px solid #253040; border-radius: 12px; }
+    .setup a { color: #60a5fa; } .setup code { display: block; padding: 8px; background: #0a0d12; border-radius: 6px; margin: 6px 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>{{PROJECT_NAME}} — 사건 인테이크</h1>
+    <span class="badge">Schift Cloud</span>
+    <span style="font-size:11.5px;color:#94a3b8;">의뢰 정보 입력 → 요약·쟁점·적용법령 자동 정리</span>
+  </header>
+
+  <div id="setup" class="setup" style="display:none">
+    <h2>설정 필요</h2>
+    <p>Schift Cloud API 키가 필요합니다.</p>
+    <ol style="padding-left:20px;line-height:1.9;">
+      <li><a href="https://app.schift.io/api-keys" target="_blank">app.schift.io/api-keys</a> 에서 키 발급</li>
+      <li><code>.env</code>에 <b>SCHIFT_API_KEY</b> 입력 후 재시작</li>
+    </ol>
+  </div>
+
+  <main id="main">
+    <div class="panel">
+      <h2>인테이크 폼</h2>
+      <label>의뢰인 이름</label>
+      <input id="name" placeholder="홍길동" />
+      <label>사실관계</label>
+      <textarea id="facts" placeholder="언제/어디서/누가/무엇을/어떻게/왜"></textarea>
+      <label>원하는 결과</label>
+      <input id="outcome" placeholder="예: 손해배상 청구, 계약 해지" />
+      <label>긴급도</label>
+      <select id="urgency">
+        <option value="normal">보통</option>
+        <option value="urgent">긴급</option>
+        <option value="critical">매우 긴급</option>
+      </select>
+      <button onclick="submitIntake()">분석 요청</button>
+    </div>
+    <div class="panel">
+      <h2>자동 정리 결과</h2>
+      <div id="out" class="out">폼을 작성하고 분석 요청을 누르세요.</div>
+      <div id="sources" class="sources" style="display:none">
+        <h2 style="font-size:12.5px;">인용 자료</h2>
+        <div id="src-list"></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (async () => {
+      const r = await fetch("/api/health").then((x) => x.json());
+      if (r.status !== "ok") {
+        document.getElementById("setup").style.display = "block";
+        document.getElementById("main").style.display = "none";
+      }
+    })();
+
+    async function submitIntake() {
+      const payload = {
+        clientName: document.getElementById("name").value,
+        facts: document.getElementById("facts").value.trim(),
+        desiredOutcome: document.getElementById("outcome").value,
+        urgency: document.getElementById("urgency").value,
+      };
+      if (!payload.facts) {
+        document.getElementById("out").textContent = "사실관계를 입력해주세요.";
+        return;
+      }
+      document.getElementById("out").textContent = "분석 중...";
+      const resp = await fetch("/api/intake", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await resp.json();
+      document.getElementById("out").textContent = data.summary ?? data.error ?? "응답 없음";
+      if (Array.isArray(data.sources) && data.sources.length) {
+        const list = document.getElementById("src-list");
+        list.innerHTML = data.sources
+          .map((s) => `<div class="src-item">• ${s.title || "source"} — ${s.cite || ""}</div>`)
+          .join("");
+        document.getElementById("sources").style.display = "block";
+      }
+    }
+  </script>
+</body>
+</html>

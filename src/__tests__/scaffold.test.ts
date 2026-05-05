@@ -136,7 +136,74 @@ describe("scaffold", () => {
     expect(pkg.dependencies.dotenv).toBe("^16.0.0");
     expect(pkg.devDependencies["@types/express"]).toBe("^5.0.0");
     expect(pkg.devDependencies["@types/cors"]).toBe("^2.8.0");
-    expect(pkg.devDependencies["@schift-io/cli"]).toBe("^0.1.0");
+    expect(pkg.devDependencies["@schift-io/cli"]).toBe("^0.1.9");
+  });
+
+  describe.each([
+    ["law-firm-chatbot", 3801],
+    ["contract-review", 3802],
+    ["case-intake", 3803],
+    ["compliance-monitor", 3804],
+  ])("scaffolds Lawyers template %s", (template, expectedPort) => {
+    it("produces a runnable Express project with SCHIFT_API_KEY gate", async () => {
+      const projectDir = path.join(tmpDir, `t-${template}`);
+      await scaffold(
+        { name: `t-${template}`, template, apiKey: "sch_lawtest1234567890" },
+        { targetDir: projectDir, skipInstall: true },
+      );
+
+      // Core files are present.
+      for (const rel of [
+        "package.json",
+        "tsconfig.json",
+        ".env",
+        ".env.example",
+        ".gitignore",
+        "README.md",
+        "public/index.html",
+        "src/server.ts",
+      ]) {
+        expect(
+          await fs.pathExists(path.join(projectDir, rel)),
+          `${template} missing ${rel}`,
+        ).toBe(true);
+      }
+
+      // .env has been processed with the provided key.
+      const env = await fs.readFile(path.join(projectDir, ".env"), "utf-8");
+      expect(env).toContain("SCHIFT_API_KEY=sch_lawtest1234567890");
+
+      // .env.example keeps the placeholder (no key leak).
+      const envExample = await fs.readFile(
+        path.join(projectDir, ".env.example"),
+        "utf-8",
+      );
+      expect(envExample).toContain("{{API_KEY}}");
+      expect(envExample).not.toContain("sch_lawtest1234567890");
+
+      // server.ts gates on SCHIFT_API_KEY and surfaces setup page.
+      const server = await fs.readFile(
+        path.join(projectDir, "src", "server.ts"),
+        "utf-8",
+      );
+      expect(server).toContain("SCHIFT_API_KEY");
+      expect(server).toContain("missingEnv");
+      expect(server).toContain("setup-required");
+      expect(server).toContain(String(expectedPort));
+
+      // README documents the key requirement + where to get one.
+      const readme = await fs.readFile(
+        path.join(projectDir, "README.md"),
+        "utf-8",
+      );
+      expect(readme).toContain("Schift Cloud API key required");
+      expect(readme).toContain("app.schift.io/api-keys");
+
+      // package.json lists @schift-io/sdk + express.
+      const pkg = await fs.readJson(path.join(projectDir, "package.json"));
+      expect(pkg.dependencies["@schift-io/sdk"]).toBeTruthy();
+      expect(pkg.dependencies.express).toBeTruthy();
+    });
   });
 
   it("throws for invalid template name", async () => {
@@ -260,7 +327,7 @@ describe("scaffold", () => {
       if (template === "cs-chatbot") {
         expect(pkg.scripts.dev).toBe("npx tsx src/server.ts");
       }
-      expect(pkg.devDependencies["@schift-io/cli"]).toBe("^0.1.0");
+      expect(pkg.devDependencies["@schift-io/cli"]).toBe("^0.1.9");
     }
   });
 

@@ -16,7 +16,7 @@ vi.mock("@inquirer/prompts", () => ({
 
 const { inputMock, selectMock, checkboxMock, confirmMock } = promptMocks;
 
-import { resolveApiKey, resolveExistingApiKey, collectConfig } from "../prompts.js";
+import { resolveApiKey, resolveExistingApiKey, collectConfig, TEMPLATES } from "../prompts.js";
 
 const originalSchiftApiKey = process.env.SCHIFT_API_KEY;
 
@@ -31,6 +31,33 @@ afterEach(() => {
   } else {
     process.env.SCHIFT_API_KEY = originalSchiftApiKey;
   }
+});
+
+describe("TEMPLATES registry", () => {
+  const values = TEMPLATES.map((t) => t.value);
+
+  it("lists every shipped Lawyers use-case template", () => {
+    for (const t of [
+      "legal-qa",
+      "law-firm-chatbot",
+      "contract-review",
+      "case-intake",
+      "compliance-monitor",
+    ]) {
+      expect(values).toContain(t);
+    }
+  });
+
+  it("still lists the pre-pivot templates", () => {
+    expect(values).toContain("blank");
+    expect(values).toContain("cs-chatbot");
+    expect(values).toContain("managed-agent");
+  });
+
+  it("has no duplicate template values", () => {
+    const uniq = new Set(values);
+    expect(uniq.size).toBe(values.length);
+  });
 });
 
 describe("resolveApiKey", () => {
@@ -231,6 +258,7 @@ describe("collectConfig", () => {
   });
 
   it("retries auth selection after non-explicit auth failure", async () => {
+    process.env.SCHIFT_API_KEY = "sch_existing123456789012345";
     inputMock
       .mockResolvedValueOnce("retry-bot")
       .mockResolvedValueOnce("sch_manual123456789012345");
@@ -239,6 +267,7 @@ describe("collectConfig", () => {
       .mockResolvedValueOnce("existing")
       .mockResolvedValueOnce("manual");
     checkboxMock.mockResolvedValueOnce(["skip"]);
+    confirmMock.mockResolvedValueOnce(false);
 
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
 

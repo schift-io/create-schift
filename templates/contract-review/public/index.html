@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{PROJECT_NAME}} — 계약서 리뷰</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, 'Pretendard', sans-serif; background: #0b0d10; color: #e5e5e5; min-height: 100vh; }
+    header { padding: 16px 24px; border-bottom: 1px solid #1d2127; display: flex; gap: 12px; align-items: center; }
+    header h1 { font-size: 16px; font-weight: 600; color: #fff; }
+    .badge { font-size: 11px; padding: 2px 8px; border-radius: 9999px; background: #1a3a2a; color: #4ade80; }
+    main { padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1200px; margin: 0 auto; }
+    textarea { width: 100%; min-height: 360px; padding: 14px; border: 1px solid #2a3446; background: #0f131a; color: #fff; border-radius: 8px; font-family: monospace; font-size: 13px; resize: vertical; }
+    button { padding: 10px 20px; background: #1d4ed8; color: #fff; border: 0; border-radius: 8px; font-weight: 500; cursor: pointer; }
+    .panel { background: #151a21; border: 1px solid #253040; border-radius: 12px; padding: 18px; }
+    .panel h2 { font-size: 14px; margin-bottom: 10px; color: #fff; }
+    .review-out { white-space: pre-wrap; line-height: 1.7; font-size: 14px; }
+    .note { font-size: 11.5px; color: #94a3b8; margin-top: 10px; }
+    .setup { margin: 40px auto; max-width: 540px; padding: 24px; background: #151a21; border: 1px solid #253040; border-radius: 12px; }
+    .setup code { display: block; padding: 8px; background: #0a0d12; border-radius: 6px; margin: 6px 0; font-size: 12.5px; }
+    .setup a { color: #60a5fa; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>{{PROJECT_NAME}} — 계약서 리뷰 초안</h1>
+    <span class="badge">Schift Cloud</span>
+    <span style="font-size:11.5px;color:#94a3b8;">클라이언트 PII 마스킹 → Schift Cloud 의견 초안</span>
+  </header>
+
+  <div id="setup" class="setup" style="display:none">
+    <h2>설정이 필요합니다</h2>
+    <p>이 템플릿은 Schift Cloud API 키가 필요합니다.</p>
+    <ol style="padding-left:20px;line-height:1.9;">
+      <li><a href="https://app.schift.io/api-keys" target="_blank">app.schift.io/api-keys</a> 에서 키 발급</li>
+      <li><code>.env</code>에 <b>SCHIFT_API_KEY</b> 입력 후 재시작</li>
+    </ol>
+  </div>
+
+  <main id="main">
+    <div class="panel">
+      <h2>계약서 원문</h2>
+      <textarea id="contract" placeholder="계약서 전문을 붙여넣기 하세요. PII(주민번호, 연락처 등)는 업로드 전에 자동 마스킹됩니다."></textarea>
+      <div style="margin-top:12px;display:flex;gap:10px;align-items:center;">
+        <button onclick="review()">리뷰 요청</button>
+        <span id="status" class="note"></span>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>리뷰 의견 초안</h2>
+      <div id="out" class="review-out" style="color:#94a3b8;">리뷰 요청을 누르면 결과가 여기에 표시됩니다.</div>
+      <div id="meta" class="note"></div>
+    </div>
+  </main>
+
+  <script>
+    (async () => {
+      const r = await fetch("/api/health").then((x) => x.json());
+      if (r.status !== "ok") {
+        document.getElementById("setup").style.display = "block";
+        document.getElementById("main").style.display = "none";
+      }
+    })();
+    async function review() {
+      const text = document.getElementById("contract").value.trim();
+      if (!text) return;
+      document.getElementById("status").textContent = "리뷰 생성 중...";
+      document.getElementById("out").textContent = "";
+      try {
+        const resp = await fetch("/api/review", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contractText: text }),
+        });
+        const data = await resp.json();
+        document.getElementById("out").textContent = data.review ?? data.error ?? "응답 없음";
+        document.getElementById("meta").textContent = data.redaction
+          ? `마스킹: ${data.redaction.entityCount}건 · 정책 ${data.redaction.policy}`
+          : "";
+        document.getElementById("status").textContent = "완료";
+      } catch (err) {
+        document.getElementById("status").textContent = "오류: " + err.message;
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "template": "compliance-monitor",
+  "features": ["regulation-qa", "pii-dlp", "audit-log"],
+  "locale": "ko",
+  "agent": {
+    "name": "{{PROJECT_NAME}}",
+    "model": "gpt-4o-mini"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "template": "contract-review",
+  "features": ["contract-upload", "client-side-pii-mask", "draft-review"],
+  "locale": "ko",
+  "agent": {
+    "name": "{{PROJECT_NAME}}",
+    "model": "gpt-4o-mini"
+  }
+}
