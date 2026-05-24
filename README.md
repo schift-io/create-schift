@@ -28,10 +28,11 @@ npx create-schift@latest
 | `law-firm-chatbot` | 로펌 의뢰인 1차 상담 + 변호사 배정 | **yes** |
 | `contract-review` | 계약서 리뷰 (client-side PII masking + 의견 초안) | **yes** |
 | `case-intake` | 사건 인테이크 (요약 · 쟁점 · 적용 법령 자동) | **yes** |
+| `pii-safe-legal-rag` | PII-safe Korean legal RAG over redacted docs | **yes** |
 | `compliance-monitor` | 규정 위반 모니터 (금융 · 공공 컴플라이언스) | **yes** |
 
 **All Lawyers use-case templates (`legal-qa`, `law-firm-chatbot`, `contract-review`,
-`case-intake`, `compliance-monitor`) are thin scaffolds that call Schift Cloud's
+`case-intake`, `pii-safe-legal-rag`, `compliance-monitor`) are thin scaffolds that call Schift Cloud's
 legal API. They do NOT work standalone — a valid `SCHIFT_API_KEY` is mandatory.
 Get one at <https://app.schift.io/api-keys>.**
 

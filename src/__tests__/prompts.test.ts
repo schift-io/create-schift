@@ -42,6 +42,7 @@ describe("TEMPLATES registry", () => {
       "law-firm-chatbot",
       "contract-review",
       "case-intake",
+      "pii-safe-legal-rag",
       "compliance-monitor",
     ]) {
       expect(values).toContain(t);

@@ -13,7 +13,7 @@
     "seed": "npx tsx src/seed.ts"
   },
   "dependencies": {
-    "@schift-io/sdk": "^0.7.1",
+    "@schift-io/sdk": "^0.9.5",
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",
     "express": "^5.1.0"

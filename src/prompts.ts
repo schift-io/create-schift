@@ -63,6 +63,10 @@ export const TEMPLATES = [
     value: "case-intake",
   },
   {
+    name: "pii-safe-legal-rag - PII-safe Korean legal RAG over redacted docs",
+    value: "pii-safe-legal-rag",
+  },
+  {
     name: "compliance-monitor - 규정 위반 모니터 (금융·공공 컴플라이언스)",
     value: "compliance-monitor",
   },

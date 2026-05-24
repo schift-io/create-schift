@@ -146,9 +146,9 @@
     <h2>설정이 필요합니다</h2>
     <p>아래 환경변수를 <code>.env</code>에 채운 뒤 서버를 재시작하세요.</p>
     <ol>
-      <li>Schift 대시보드에서 bucket 생성 → ID 복사</li>
-      <li><code>.env</code>에 <b>SCHIFT_API_KEY</b>, <b>LEGAL_BUCKET_ID</b> 입력</li>
-      <li><code>npm run seed -- --bucket-id &lt;id&gt;</code>로 샘플 corpus 업로드</li>
+      <li>Schift 대시보드에서 답변 자료를 준비</li>
+      <li><code>.env</code> 연결 정보와 자료 위치를 입력</li>
+      <li><code>npm run seed</code>로 샘플 corpus 업로드</li>
       <li><code>npm run dev</code> 로 재시작</li>
     </ol>
     <div id="setup-missing"></div>
@@ -234,7 +234,7 @@
         if (data.durationMs) {
           const dur = document.createElement("div");
           dur.className = "duration";
-          dur.textContent = data.durationMs + "ms";
+          dur.textContent = "답변 완료";
           loading.appendChild(dur);
         }
       } catch (err) {

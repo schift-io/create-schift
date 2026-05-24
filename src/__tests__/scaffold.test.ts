@@ -144,6 +144,7 @@ describe("scaffold", () => {
     ["contract-review", 3802],
     ["case-intake", 3803],
     ["compliance-monitor", 3804],
+    ["pii-safe-legal-rag", 3805],
   ])("scaffolds Lawyers template %s", (template, expectedPort) => {
     it("produces a runnable Express project with SCHIFT_API_KEY gate", async () => {
       const projectDir = path.join(tmpDir, `t-${template}`);
@@ -190,6 +191,16 @@ describe("scaffold", () => {
       expect(server).toContain("missingEnv");
       expect(server).toContain("setup-required");
       expect(server).toContain(String(expectedPort));
+      if (template === "pii-safe-legal-rag") {
+        expect(server).toContain("/api/redact");
+        expect(server).toContain("/api/ingest");
+        expect(server).toContain("/api/ask");
+        expect(server).toContain("redactionSessionId");
+        expect(server).toContain("deriveBucketName");
+        expect(server).toContain("BUCKET_NAME_RE");
+        expect(server).not.toContain('missingEnv.push("SCHIFT_BUCKET_ID")');
+        expect(server).not.toContain("/v1/legal/qa");
+      }
 
       // README documents the key requirement + where to get one.
       const readme = await fs.readFile(
@@ -198,10 +209,16 @@ describe("scaffold", () => {
       );
       expect(readme).toContain("Schift Cloud API key required");
       expect(readme).toContain("app.schift.io/api-keys");
+      if (template === "pii-safe-legal-rag") {
+        expect(readme).toContain("redacted text");
+        expect(readme).toContain("redacted_before_ingest=true");
+        expect(readme).toContain("<topic-slug>-<topic-hash>");
+        expect(readme).toContain("hyphens only");
+      }
 
       // package.json lists @schift-io/sdk + express.
       const pkg = await fs.readJson(path.join(projectDir, "package.json"));
-      expect(pkg.dependencies["@schift-io/sdk"]).toBeTruthy();
+      expect(pkg.dependencies["@schift-io/sdk"]).toBe("^0.9.5");
       expect(pkg.dependencies.express).toBeTruthy();
     });
   });

@@ -143,17 +143,17 @@
           body: JSON.stringify({ message: text }),
         });
         const data = await resp.json();
-        loadingEl.textContent = data.answer ?? data.error ?? "No response";
+        loadingEl.textContent = data.answer ?? data.error ?? "아직 답변이 없습니다";
         loadingEl.classList.remove("loading");
 
         if (data.durationMs) {
           const dur = document.createElement("div");
           dur.className = "duration";
-          dur.textContent = `${data.durationMs}ms`;
+          dur.textContent = "답변 완료";
           loadingEl.appendChild(dur);
         }
       } catch (err) {
-        loadingEl.textContent = "Error: " + err.message;
+        loadingEl.textContent = "요청을 완료하지 못했습니다: " + err.message;
         loadingEl.classList.remove("loading");
       }
       sendBtn.disabled = false;

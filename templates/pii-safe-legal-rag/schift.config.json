@@ -1,0 +1,17 @@
+{
+  "name": "{{PROJECT_NAME}}",
+  "template": "pii-safe-legal-rag",
+  "features": ["pii-redaction", "redacted-ingest", "legal-rag", "citations"],
+  "locale": "ko",
+  "rag": {
+    "bucket": "{{PROJECT_SLUG}}-legal-rag",
+    "pii": {
+      "redactBeforeIngest": true,
+      "preset": "strong"
+    }
+  },
+  "agent": {
+    "name": "{{PROJECT_NAME}}",
+    "model": "gpt-4o-mini"
+  }
+}
