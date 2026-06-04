@@ -4,7 +4,7 @@ import type { AgentTool, ToolResult } from "@schift-io/sdk";
  * draft_document — ask Schift Cloud to build a legal draft from a template.
  *
  * In Phase 1 this simply echoes a stub. In production, point it at
- * POST /v1/legal/draft on your Schift API (see docs/plans/2026-04-19-legalize-launch.md).
+ * POST /v1/legal/draft on your Schift API (see apps/lawyers/docs/plans/2026-04-19-legalize-launch.md).
  */
 export const draftDocument: AgentTool = {
   name: "draft_document",
