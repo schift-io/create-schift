@@ -40,7 +40,7 @@ legal text
   -> /api/ingest
   -> Schift /v1/buckets/{bucket_id}/upload
   -> /api/ask
-  -> Schift /v1/buckets/{bucket_id}/search
+  -> Schift /v2/buckets/{bucket_id}/search
   -> retrieval answer + sources
 ```
 

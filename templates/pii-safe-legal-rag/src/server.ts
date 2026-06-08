@@ -270,7 +270,7 @@ async function askLegalRag(input: AskRequest, latestSessionId: string | null): P
   const question = input.question?.trim();
   if (!question) throw new Error("question is required");
 
-  const resp = await fetch(`${apiBase}/v1/buckets/${targetBucket}/search`, {
+  const resp = await fetch(`${apiBase}/v2/buckets/${targetBucket}/search`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -279,9 +279,10 @@ async function askLegalRag(input: AskRequest, latestSessionId: string | null): P
     body: JSON.stringify({
       query: question,
       top_k: 6,
-      mode: "hybrid",
-      enhance: "expand",
-      task: "question_answering",
+      options: {
+        rerank: { enabled: true },
+        instructions: { task: "question_answering" },
+      },
     }),
   });
 
@@ -291,7 +292,7 @@ async function askLegalRag(input: AskRequest, latestSessionId: string | null): P
   }
 
   const data = await resp.json();
-  const sources = normalizeSearchSources(data.results);
+  const sources = normalizeSearchSources(data);
   return {
     answer: buildRetrievalAnswer(question, sources),
     sources,
@@ -303,12 +304,24 @@ async function askLegalRag(input: AskRequest, latestSessionId: string | null): P
   };
 }
 
-function normalizeSearchSources(results: unknown): Array<{
+function normalizeSearchSources(searchResponse: unknown): Array<{
   title: string;
   excerpt: string;
   score: number;
   chunkId: string;
 }> {
+  const response = searchResponse as any;
+  const results = Array.isArray(response?.results)
+    ? response.results
+    : Array.isArray(response?.citations)
+      ? response.citations.map((citation: any) => ({
+          id: citation.chunk_id ?? citation.document_id ?? citation.source_id,
+          text: response.context,
+          score: 1,
+          metadata: citation,
+          citation: citation.title ?? citation.source_url,
+        }))
+      : [];
   if (!Array.isArray(results)) return [];
   return results.slice(0, 6).map((result: any, index) => ({
     title: String(
