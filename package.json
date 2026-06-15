@@ -1,6 +1,6 @@
 {
   "name": "create-schift",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Create a new Schift AI agent project",
   "type": "module",
   "bin": {

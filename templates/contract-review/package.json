@@ -12,7 +12,7 @@
     "deploy": "npx schift deploy"
   },
   "dependencies": {
-    "@schift-io/sdk": "^0.9.5",
+    "@schift-io/sdk": "^0.10.1",
     "@schift-io/doc-redact": "^0.1.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",
